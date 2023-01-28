@@ -5,17 +5,24 @@ import CreateProject from "../components/projects/CreateProject";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
+import { UserButton } from "@clerk/nextjs";
+import Header from "../components/Header";
 
 export default function Index() {
   const { data, error, refetch } = trpc.project.list.useQuery();
+  // user switcher from clerk?
+
 
   if (error) return <ErrorMessage />;
   if (!data) return <Loading />;
 
   return (
-    <p className="text-2xl">
+    <div className="h-[100vh] w-[100vw] fixed bg-[#EEEEFE]">
+      <Header/>
       Hello <FontAwesomeIcon icon={faClock} />
-    </p>
+      {/* <UserButton /> */}
+
+    </div>
   );
 
   // return (
