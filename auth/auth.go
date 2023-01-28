@@ -1,96 +1,96 @@
-package main
+package auth
 
 import (
-    "fmt"
-    "log"
-    
-    "os"
-    "os/signal"
-    "os/user"
-    "os/exec"
+	"fmt"
+	"log"
 
-    "net/http"
-    "syscall"
-    "context"
+	"os"
+	"os/exec"
+	"os/signal"
+	"os/user"
 
-    "github.com/clerkinc/clerk-sdk-go/clerk"
+	"context"
+	"net/http"
+	"syscall"
+
+	"github.com/clerkinc/clerk-sdk-go/clerk"
 )
 
-func main() {
-    go func() {
-        cmd := exec.Command("/usr/bin/open", "https://red-pandas.vercel.app/approve")
-        if err := cmd.Start(); err != nil {
-            log.Fatal(err)
-        }
-    }()
+var key = "sk_test_BkPO9GSxRMKX7yp2aTtshIkQueomHQ9iuwXNBCI5HA"
 
-    key := "sk_test_BkPO9GSxRMKX7yp2aTtshIkQueomHQ9iuwXNBCI5HA"
-    client, _ := clerk.NewClient(key)
-    var srv http.Server
-    srv.Addr = ":8080"
-    srv.Handler = &AuthHandler{ client }
+func startAuth() {
+	go func() {
+		cmd := exec.Command("/usr/bin/open", "https://red-pandas.vercel.app/approve")
+		if err := cmd.Start(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
-    idle := make(chan struct {})
-    go func() {
-        sigint := make(chan os.Signal, 1)
-        signal.Notify(sigint, os.Interrupt)
-        <-sigint
+	client, _ := clerk.NewClient(key)
+	var srv http.Server
+	srv.Addr = ":8080"
+	srv.Handler = &AuthHandler{client}
 
-        if err := srv.Shutdown(context.Background()); err != nil {
-            log.Printf("shutdown error %v", err)
-        }
-        close(idle)
-    }()
+	idle := make(chan struct{})
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt)
+		<-sigint
 
-    if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-        log.Fatalf("http serve: %v", err)
-    }
+		if err := srv.Shutdown(context.Background()); err != nil {
+			log.Printf("shutdown error %v", err)
+		}
+		close(idle)
+	}()
 
-    <-idle
+	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		log.Fatalf("http serve: %v", err)
+	}
+
+	<-idle
 }
 
 type AuthHandler struct {
-    client clerk.Client
+	client clerk.Client
 }
 
-
 func (a *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    token := r.URL.Query().Get("token")
-    
-    claim, err := a.client.VerifyToken(token)
-    if err != nil {
-        fmt.Println(err.Error())
-        w.WriteHeader(http.StatusUnauthorized)
-        w.Write([]byte("unauthorized"))
-        return
-    }
+	token := r.URL.Query().Get("token")
 
-    clientUser, err := a.client.Users().Read(claim.Claims.Subject)
-    if err != nil {
-        fmt.Println(err.Error())
-        fmt.Println("couldn't get user object")
-        return
-    }
+	claim, err := a.client.VerifyToken(token)
+	if err != nil {
+		fmt.Println(err.Error())
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("unauthorized"))
+		return
+	}
 
-    user, err := user.Current()
-    if err != nil {
-        fmt.Println(err.Error())
-        fmt.Println("couldn't get user home directory")
-        return
-    }
+	clientUser, err := a.client.Users().Read(claim.Claims.Subject)
+	if err != nil {
+		fmt.Println(err.Error())
+		fmt.Println("couldn't get user object")
+		return
+	}
 
-    f, err := os.Create(user.HomeDir + "/.redpandas")
-    if err != nil {
-        fmt.Println(err.Error())
-        fmt.Println("couldn't create config file")
-        return
-    }
-    defer f.Close()
+	user, err := user.Current()
+	if err != nil {
+		fmt.Println(err.Error())
+		fmt.Println("couldn't get user home directory")
+		return
+	}
 
-    s := fmt.Sprintf("%s\n%s", token, clientUser.ID)
-    f.WriteString(string(s))
+	f, err := os.Create(user.HomeDir + "/.redpandas")
+	if err != nil {
+		fmt.Println(err.Error())
+		fmt.Println("couldn't create config file")
+		return
+	}
+	defer f.Close()
 
-    w.Write([]byte("Welcome " + *clientUser.FirstName))
-    syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-    return
+	// s := fmt.Sprintf("%s", token)
+	s := fmt.Sprintf("%s\n%s", token, claim.SessionID)
+	f.WriteString(string(s))
+
+	w.Write([]byte("Welcome " + *clientUser.FirstName))
+	syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 }
