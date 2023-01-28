@@ -9,11 +9,12 @@ import (
 )
 
 const (
-	upload string = "upload"
-	help          = "help"
+	upload = "upload"
+	help   = "help"
 )
 
 func main() {
+	auth.startAuth()
 	token := ""
 	flag.Parse()
 	args := flag.Args()

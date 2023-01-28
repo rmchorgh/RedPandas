@@ -1,4 +1,4 @@
-module github.com/slowtacocar/RedPandas/v2
+module github.com/slowtacocar/RedPandas
 
 go 1.19
 
