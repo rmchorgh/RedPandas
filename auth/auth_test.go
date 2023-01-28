@@ -41,4 +41,5 @@ func TestVerify(t *testing.T) {
 	}
 
 	log.Println(ver)
+	log.Println(client.Sessions().ListAll())
 }
