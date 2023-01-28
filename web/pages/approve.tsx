@@ -1,9 +1,8 @@
-import { Button } from "@mantine/core";
 import Cookies from "js-cookie";
 
 export default function Approve() {
   return (
-    <Button
+    <button
       onClick={() =>
         (window.location.href = `http://localhost:8080?token=${Cookies.get(
           "__session"
@@ -11,6 +10,6 @@ export default function Approve() {
       }
     >
       Approve
-    </Button>
+    </button>
   );
 }

@@ -1,5 +1,4 @@
 import { trpc } from "../../lib/client/trpc";
-import { ScrollArea, Table } from "@mantine/core";
 import ErrorMessage from "../ErrorMessage";
 import Loading from "../Loading";
 
@@ -16,8 +15,8 @@ export default function Dataset({ projectId }: DatasetProps) {
   if (!data) return <Loading />;
 
   return (
-    <ScrollArea>
-      <Table sx={{ whiteSpace: "nowrap" }}>
+    <div>
+      <table>
         <thead>
           <tr>
             {data.columns.map((column) => (
@@ -34,7 +33,7 @@ export default function Dataset({ projectId }: DatasetProps) {
             </tr>
           ))}
         </tbody>
-      </Table>
-    </ScrollArea>
+      </table>
+    </div>
   );
 }
