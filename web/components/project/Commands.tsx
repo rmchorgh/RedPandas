@@ -1,7 +1,6 @@
 import { trpc } from "../../lib/client/trpc";
 import Loading from "../Loading";
 import ErrorMessage from "../ErrorMessage";
-import { Box, Button, Code } from "@mantine/core";
 import { useAbly } from "../../lib/client/ably";
 import RunCommand from "./RunCommand";
 
@@ -26,22 +25,20 @@ export default function Commands({ projectId }: CommandsProps) {
   return (
     <>
       {data.commands.map((command) => (
-        <Box key={command.revisionId}>
-          <Box>
-            <Code>{command.input}</Code>
-          </Box>
-          <Code>{command.output}</Code>
+        <div key={command.revisionId}>
+            <code>{command.input}</code>
+          <code>{command.output}</code>
           {mutateError && <ErrorMessage />}
-          <Button
+          <button
             onClick={() =>
               mutate({ revisionId: command.revisionId, projectId })
             }
           >
             Revert to here
-          </Button>
-        </Box>
+          </button>
+        </div>
       ))}
-      {data.runningCommandInput && <Code>{data.runningCommandInput}</Code>}
+      {data.runningCommandInput && <code>{data.runningCommandInput}</code>}
       <RunCommand projectId={projectId} onSuccess={() => refetch()} />
     </>
   );
