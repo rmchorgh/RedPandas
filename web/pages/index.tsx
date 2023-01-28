@@ -16,7 +16,7 @@ export default function Index() {
   if (!data) return <Loading />;
 
   return (
-    <div className="h-[100vh] w-[100vw] fixed top">
+    <div className="h-[100vh] w-[100vw] fixed top p-10">
       hello
 
     </div>
