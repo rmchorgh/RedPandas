@@ -21,11 +21,12 @@ COPY ./ .
 
 # We no longer need to use the x86_64-unknown-linux-musl target
 RUN cargo build --release
+RUN strip -s /interpreter/target/release/interpreter
 
 ####################################################################################################
 ## Final image
 ####################################################################################################
-FROM debian:buster-slim
+FROM gcr.io/distroless/cc
 
 # Import from builder.
 COPY --from=builder /etc/passwd /etc/passwd
@@ -39,7 +40,6 @@ COPY --from=builder /interpreter/target/release/interpreter ./
 # Use an unprivileged user.
 USER interpreter:interpreter
 
-EXPOSE 3000
 CMD ["/interpreter/interpreter"]
 
-# docker build -t interpreter:debian -f Dockerfile .
+# docker build -t interpreter:distroless -f Dockerfile .
