@@ -4,7 +4,15 @@ import Head from "next/head";
 import { ClerkProvider, UserButton } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import Auth from "../components/Auth";
-import { AppShell, Header, MantineProvider, Text, Group } from "@mantine/core";
+import {
+  AppShell,
+  Header,
+  MantineProvider,
+  Text,
+  Group,
+  Anchor,
+} from "@mantine/core";
+import Link from "next/link";
 //import { useColorScheme } from "@mantine/hooks";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
@@ -30,13 +38,15 @@ const MyApp: AppType = ({ Component, pageProps }) => {
             header={
               <Header height={65}>
                 <Group h="100%" px="lg" py="sm" position="apart">
-                  <Text
+                  <Anchor
+                    component={Link}
+                    href="/"
                     fz={25}
                     c={{ light: "gray.9", dark: "white" }[colorScheme]}
                     fw={600}
                   >
                     RedPandas
-                  </Text>
+                  </Anchor>
                   <Group>
                     <UserButton />
                   </Group>
