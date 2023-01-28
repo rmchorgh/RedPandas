@@ -1,38 +1,44 @@
-FROM rust:1.43 as builder
+FROM rustlang/rust:nightly as builder
+RUN update-ca-certificates
 
-RUN USER=root cargo new --bin rust-docker-web
-WORKDIR ./rust-docker-web
-COPY ./Cargo.toml ./Cargo.toml
+# Create appuser
+ENV USER=myip
+ENV UID=10001
+
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    "${USER}"
+
+
+WORKDIR /myip
+
+COPY ./ .
+
+# We no longer need to use the x86_64-unknown-linux-musl target
 RUN cargo build --release
-RUN rm src/*.rs
 
-ADD . ./
+####################################################################################################
+## Final image
+####################################################################################################
+FROM gcr.io/distroless/cc
 
-RUN rm ./target/release/deps/rust_docker_web*
-RUN cargo build --release
+# Import from builder.
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
 
+WORKDIR /myip
 
-FROM debian:buster-slim
-ARG APP=/usr/src/app
+# Copy our build
+COPY --from=builder /myip/target/release/myip ./
 
-RUN apt-get update \
-    && apt-get install -y ca-certificates tzdata \
-    && rm -rf /var/lib/apt/lists/*
+# Use an unprivileged user.
+USER myip:myip
 
-EXPOSE 8000
+CMD ["/myip/myip"]
 
-ENV TZ=Etc/UTC \
-    APP_USER=appuser
-
-RUN groupadd $APP_USER \
-    && useradd -g $APP_USER $APP_USER \
-    && mkdir -p ${APP}
-
-COPY --from=builder /rust-docker-web/target/release/rust-docker-web ${APP}/rust-docker-web
-
-RUN chown -R $APP_USER:$APP_USER ${APP}
-
-USER $APP_USER
-WORKDIR ${APP}
-
-CMD ["./rust-docker-web"]
+# docker build -t myip:distroless -f Dockerfile .
