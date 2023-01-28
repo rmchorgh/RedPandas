@@ -1,4 +1,4 @@
-module github.com/slowtacocar/RedPandas/auth/v2
+module github.com/slowtacocar/RedPandas/v2
 
 go 1.19
 
