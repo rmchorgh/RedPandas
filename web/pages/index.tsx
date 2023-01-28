@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { UserButton } from "@clerk/nextjs";
+import Banner from "../components/Banner";
 
 export default function Index() {
   const { data, error, refetch } = trpc.project.list.useQuery();
@@ -17,6 +18,7 @@ export default function Index() {
 
   return (
     <div className="h-[100vh] w-[100vw] fixed top p-10">
+      <Banner/>
       hello
 
     </div>
