@@ -4,79 +4,97 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
+	"strings"
+
+	"github.com/slowtacocar/RedPandas/auth"
 )
 
 const (
-	upload = "upload"
-	help   = "help"
+	Upload = "upload"
+	Help   = "help"
 )
 
 func main() {
-	token := ""
 	flag.Parse()
 	args := flag.Args()
 	op := args[0]
 
-	if op == upload {
-		path := args[1]
-
-		file, err := os.Open(path)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		defer file.Close()
-
-		response, err := http.Get("https://rp-cli-api-nhidc3zewa-uc.a.run.app/?file=hi.csv&token=" + token)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-		defer response.Body.Close()
-
-		if response.StatusCode != http.StatusOK {
-			fmt.Println("Error:", response.Status)
-			return
-		}
-
-		body, err := io.ReadAll(response.Body)
-		if err != nil {
-			fmt.Println("Error:", err)
-		}
-		fmt.Println(string(body))
-
-		request, err := http.NewRequest("PUT", string(body), file)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		request.Header.Add("Content-Type", "text/csv")
-
-		response, err = http.DefaultClient.Do(request)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		defer response.Body.Close()
-
-		body, err = io.ReadAll(response.Body)
-		if err != nil {
-			fmt.Println("Error:", err)
-		}
-		fmt.Println(string(body))
-
-		if response.StatusCode != http.StatusOK {
-			fmt.Println("Error:", response.Status)
-			return
-		}
-
-		fmt.Println("File uploaded successfully!")
-
-	} else if op == help {
-		fmt.Println("Options:\n\t-upload: Upload File\n\t-help: Show Help")
-	} else {
+	switch op {
+	case Upload:
+		auth.StartAuth()
+		sessionTokenThenSessionID := auth.GetSessionInfo()
+		sessionToken := sessionTokenThenSessionID[0]
+		sessionID := sessionTokenThenSessionID[1]
+		uploadFile(sessionToken, sessionID, args)
+	case Help:
+		usageHelp()
+	default:
 		fmt.Println("Invalid Input")
 	}
+}
+
+func usageHelp() {
+	fmt.Println("Options:\n\t-upload: Upload File\n\t-help: Show Help")
+}
+
+func uploadFile(token string, id string, args []string) {
+	path := args[1]
+
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
+
+	fsplit := strings.Split(path, "/")
+	url := fmt.Sprintf("https://rp-cli-api-nhidc3zewa-uc.a.run.app/?file=%s&token=%s&id=%s", fsplit[len(fsplit)-1], token, id)
+
+	res, err := http.Get(url)
+	if err != nil {
+		log.Fatalln("Error:", err)
+		return
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		log.Fatalln("Error:", res.Status)
+		return
+	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Fatalln("Error:", err)
+	}
+	fmt.Println(string(body))
+
+	req, err := http.NewRequest("PUT", string(body), file)
+	if err != nil {
+		log.Fatalln("Error:", err)
+		return
+	}
+	req.Header.Add("Content-Type", "text/csv")
+
+	res, err = http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatalln("Error:", err)
+		return
+	}
+	defer res.Body.Close()
+
+	_, err = io.ReadAll(res.Body)
+	if err != nil {
+		log.Fatalln("Error:", err)
+		return
+	}
+
+	if res.StatusCode != http.StatusOK {
+		log.Fatalln("Error:", res.Status)
+		return
+	}
+
+	fmt.Println("File uploaded successfully!")
 }

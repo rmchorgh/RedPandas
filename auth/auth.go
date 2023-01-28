@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"os"
 	"os/exec"
@@ -17,14 +18,24 @@ import (
 )
 
 var key = "sk_test_BkPO9GSxRMKX7yp2aTtshIkQueomHQ9iuwXNBCI5HA"
+var fileLoc string
 
-func startAuth() {
+func StartAuth() {
 	go func() {
 		cmd := exec.Command("/usr/bin/open", "https://red-pandas.vercel.app/approve")
 		if err := cmd.Start(); err != nil {
 			log.Fatal(err)
 		}
 	}()
+
+	user, err := user.Current()
+	if err != nil {
+		fmt.Println(err.Error())
+		fmt.Println("couldn't get user home directory")
+		return
+	}
+
+	fileLoc = user.HomeDir + "/.redpandas"
 
 	client, _ := clerk.NewClient(key)
 	var srv http.Server
@@ -50,8 +61,28 @@ func startAuth() {
 	<-idle
 }
 
+func GetSessionInfo() []string {
+	sessionTokenThenSessionID, err := os.ReadFile(fileLoc)
+	if err != nil {
+		log.Fatalf("couldn't get config file\n%v\n", err)
+		return []string{}
+	}
+
+	combo := strings.Split(string(sessionTokenThenSessionID), "\n")
+	if len(combo) != 2 {
+		log.Fatalln("not enough data in config file")
+	}
+	return combo
+}
+
 type AuthHandler struct {
 	client clerk.Client
+}
+
+func deleteFile() {
+	if err := os.Remove(fileLoc); err != nil {
+		log.Fatalln("couldn't delete old token file", err)
+	}
 }
 
 func (a *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -69,20 +100,15 @@ func (a *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err.Error())
 		fmt.Println("couldn't get user object")
+		deleteFile()
 		return
 	}
 
-	user, err := user.Current()
-	if err != nil {
-		fmt.Println(err.Error())
-		fmt.Println("couldn't get user home directory")
-		return
-	}
-
-	f, err := os.Create(user.HomeDir + "/.redpandas")
+	f, err := os.Create(fileLoc)
 	if err != nil {
 		fmt.Println(err.Error())
 		fmt.Println("couldn't create config file")
+		deleteFile()
 		return
 	}
 	defer f.Close()

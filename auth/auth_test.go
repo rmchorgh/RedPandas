@@ -12,7 +12,7 @@ import (
 )
 
 func TestAuth(t *testing.T) {
-	startAuth()
+	StartAuth()
 }
 
 func TestVerify(t *testing.T) {
