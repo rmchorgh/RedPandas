@@ -9,3 +9,7 @@
 .custom-gray {
     background-color: #EEEEFE;
 } */
+
+.top {
+    background-image: linear-gradient(180deg, #f5f7fe 5%, #faedff 27%, #faedff 63%, #bfb0df);
+}

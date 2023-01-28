@@ -6,7 +6,6 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { UserButton } from "@clerk/nextjs";
-import Header from "../components/Header";
 
 export default function Index() {
   const { data, error, refetch } = trpc.project.list.useQuery();
@@ -17,10 +16,8 @@ export default function Index() {
   if (!data) return <Loading />;
 
   return (
-    <div className="h-[100vh] w-[100vw] fixed bg-[#EEEEFE]">
-      <Header/>
-      Hello <FontAwesomeIcon icon={faClock} />
-      {/* <UserButton /> */}
+    <div className="h-[100vh] w-[100vw] fixed top">
+      hello
 
     </div>
   );
