@@ -8,10 +8,14 @@ export interface Project {
   commands: {
     input: string;
     output: string;
-    datasetIds: string[];
+    datasets: {
+      id: string;
+      revision: number;
+      name: string;
+    }[];
   }[];
   runningCommandInput: string | null;
-  commandIndex: number;
+  revision: number;
   encKey: string;
 }
 

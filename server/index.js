@@ -22,19 +22,18 @@ functions.http("kamalSexy", async (req, res) => {
   const client = await Clerk.verifyToken(token);
   const session = await Clerk.sessions.verifySession(client.sid, token);
 
-  const datasetId = crypto.randomUUID()
-  const revisionId = crypto.randomUUID()
+  const datasetId = crypto.randomUUID();
 
   // Get a v4 signed URL for uploading file
   const [url] = await storage
     .bucket("rp-projects")
-    .file(`${session.userId}/${datasetId}/${revisionId}`)
+    .file(`${session.userId}/${datasetId}.0`)
     .getSignedUrl({
-    version: "v4",
-    action: "write",
-    expires: Date.now() + 15 * 60 * 1000, // 15 minutes
-    contentType: "text/csv",
-  });
+      version: "v4",
+      action: "write",
+      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+      contentType: "text/csv",
+    });
 
-  res.send({url, datasetId, revisionId});
+  res.send({ url, datasetId });
 });

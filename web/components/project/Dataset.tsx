@@ -1,34 +1,56 @@
 import { trpc } from "../../lib/client/trpc";
 import ErrorMessage from "../ErrorMessage";
 import Loading from "../Loading";
+import { memo } from "react";
 
 export interface DatasetProps {
-  projectId: string;
+  datasetId: string;
+  revision: number;
 }
 
-export default function Dataset({ projectId }: DatasetProps) {
+function Dataset({ datasetId, revision }: DatasetProps) {
   const { data, error } = trpc.project.getDataset.useQuery({
-    projectId,
+    datasetId,
+    revision,
   });
 
-  if (error) return <ErrorMessage />;
-  if (!data) return <Loading />;
+  const formattedNumber = (someNumber: number) => {
+    return Number(someNumber.toString().match(/^\d+(?:\.\d{0,5})?/));
+  };
+
+  if (error) {
+    return <ErrorMessage />;
+  }
+  if (!data) {
+    return <Loading />;
+  }
 
   return (
-    <div className={" bg-[white] "}>
+    <div className={"  bg-[transparent] text-xs"}>
       <table>
         <thead>
-          <tr>
+          <tr className={"sticky top-0 bg-[#F8F8F8]"}>
             {data.columns.map((column) => (
-              <th key={column}>{column}</th>
+              <th
+                key={column}
+                className={" mr-2 border-r border-l border-gray-100 py-6 px-2"}
+              >
+                {column}
+              </th>
             ))}
           </tr>
         </thead>
+
         <tbody>
           {data.rows.map((row, i) => (
-            <tr key={i}>
+            <tr key={i} className={`${i % 2 != 0 ? "bg-gray-50" : "bg-white"}`}>
               {row.map((cell, j) => (
-                <td key={j}>{cell}</td>
+                <td
+                  key={j}
+                  className={"mr-2 border-r border-l border-[#F9FAFBAC] py-6"}
+                >
+                  {cell}
+                </td>
               ))}
             </tr>
           ))}
@@ -37,3 +59,5 @@ export default function Dataset({ projectId }: DatasetProps) {
     </div>
   );
 }
+
+export default memo(Dataset);

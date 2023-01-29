@@ -12,9 +12,8 @@ import (
 )
 
 type Response struct {
-	URL        string `json:"url"`
-	DatasetID  string `json:"datasetId"`
-	RevisionID string `json:"revisionId"`
+	URL       string `json:"url"`
+	DatasetID string `json:"datasetId"`
 }
 
 var uploadCmd = &cobra.Command{
@@ -86,7 +85,6 @@ rp upload [file path]`,
 
 		fmt.Println("File uploaded successfully! Use the following values to use this dataset:")
 		fmt.Printf("Dataset ID: %s\n", result.DatasetID)
-		fmt.Printf("Revision ID: %s\n", result.RevisionID)
 	},
 }
 
