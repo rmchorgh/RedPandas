@@ -2,7 +2,7 @@
 use std::process::Command;
 
 use reqwest::Error;
-use rocket::{custom, response::status, serde::json::Json, Config};
+use rocket::{response::status, serde::json::Json};
 use structs::{RunReq, UUID};
 
 pub mod structs;
@@ -12,12 +12,7 @@ extern crate rocket;
 
 #[launch]
 fn rocket() -> _ {
-    let c = Config {
-        port: 3000,
-        ..Config::default()
-    };
-    println!("IP: {}\nPORT: {}", c.address.to_string(), c.port);
-    custom(&c).mount("/", routes![run_code])
+    rocket::build().mount("/", routes![run_code])
 }
 
 #[post("/run/<user>/<project>", format = "json", data = "<json>")]
@@ -79,15 +74,23 @@ save_dfs(dfs)"#,
     };
 
     if out[1].is_empty() {
-        _ = callback();
-        return Ok("success".to_string());
+        _ = callback(project, json.code().to_string(), out[0].to_string());
+        return Ok(out[0].to_string());
     }
 
     return Err(status::BadRequest(Some(out[1].to_string())));
 }
 
-async fn callback() -> Result<String, Error> {
+async fn callback(project: UUID<'_>, input: String, output: String) -> Result<String, Error> {
     let url = "https://red-pandas.vercel.app/api/orchestrator-hook";
     let c = reqwest::Client::new();
-    c.get(url).send().await?.text().await
+    c.post(url)
+        .body(format!(
+            "{{\"project\": {}, \"input\": {}, \"output\": {}}}",
+            project, input, output
+        ))
+        .send()
+        .await?
+        .text()
+        .await
 }
