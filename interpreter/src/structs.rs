@@ -1,5 +1,5 @@
 use derive_getters::Getters;
-use rocket::{http::RawStr, request::FromParam, serde::Deserialize};
+use rocket::{http::RawStr, request::FromParam, response::Responder, serde::Deserialize};
 use std::fmt::Display;
 
 pub(crate) struct UUID<'r>(&'r str);
@@ -22,10 +22,4 @@ impl Display for UUID<'_> {
 pub(crate) struct RunReq {
     active_dfs: Vec<String>,
     code: String,
-}
-
-#[derive(Deserialize, Getters)]
-pub(crate) struct BatchPreviewReq {
-    dataframes: Vec<String>,
-    revisions: Vec<String>,
 }

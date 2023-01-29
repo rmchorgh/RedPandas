@@ -1,0 +1,22 @@
+steps:
+    - name: 'gcr.io/cloud-builders/docker'
+      args:
+          [
+              'build',
+              '-t',
+              'us-west2-docker.pkg.dev/redpandas-376106/interpreter/interpreter',
+              '.'
+          ]
+    - name: 'gcr.io/cloud-builders/gcloud'
+      args:
+          - 'run'
+          - 'deploy'
+          - 'cloudrunservice'
+          - '--image'
+          - 'us-docker.pkg.dev/cloudrun/container/hello'
+          - '--region'
+          - 'us-central1'
+          - '--platform'
+          - 'managed'
+          - '--allow-unauthenticated'
+images: ['us-west2-docker.pkg.dev/redpandas-376106/interpreter/interpreter']

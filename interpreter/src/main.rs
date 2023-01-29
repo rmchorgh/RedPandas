@@ -1,10 +1,10 @@
 #![feature(decl_macro)]
 use std::process::Command;
 
-use rocket::{custom, serde::json::Json, Config};
+use reqwest::Error;
+use rocket::{custom, response::status, serde::json::Json, Config};
 use structs::{RunReq, UUID};
 
-use crate::structs::BatchPreviewReq;
 pub mod structs;
 
 #[macro_use]
@@ -16,64 +16,77 @@ fn rocket() -> _ {
         port: 3000,
         ..Config::default()
     };
-    custom(&c).mount("/", routes![run_code, preview, batch_preview])
+    custom(&c).mount("/", routes![run_code])
 }
 
-#[post("/run/<user>/<project>", data = "<json>")]
-fn run_code(user: UUID, project: UUID, json: Json<RunReq>) -> String {
-    let _execute = format!(
-        r#"from polars import scan_csv
-dfs = (
-    scan_csv(x) 
-    for x in [
-        {}
-    ]
-)
+#[post("/run/<user>/<project>", format = "json", data = "<json>")]
+fn run_code(
+    user: UUID,
+    project: UUID,
+    json: Json<RunReq>,
+) -> Result<String, status::BadRequest<String>> {
+    let execute = format!(
+        r#"
+from polars import read_csv
+from google.cloud import storage
 
-{}"#,
+user = '{}'
+project = '{}'
+files = [
+    {}
+]
+
+
+client = storage.Client()
+bucket = client.bucket('rp-projects')
+
+def load_dfs():
+    blobs = map(lambda x: bucket.blob(f'{{user}}/{{project}}/{{x}}'), files)
+    return list(map(lambda x: read_csv(x.download_as_string()), blobs))
+
+def save_dfs(dfs):
+    for i, x in enumerate(dfs):
+        fn = files[i]
+        if fn[-2] != '.':
+            fn += '.0'
+        else:
+            rev_count = int(fn[-1]) + 1
+            fn = fn[:-1] + rev_count
+
+        blob = bucket.blob(f'{{user}}/{{project}}/{{fn}}')
+        blob.upload_from_string(x.write_csv())
+
+dfs = load_dfs()
+
+{}
+
+save_dfs(dfs)"#,
+        user,
+        project,
         json.active_dfs().iter().fold("".to_string(), |acc, x| {
             format!("{}\"{}\",\n\t\t", acc, x)
         }),
         json.code()
     );
 
-    let out_raw = Command::new("python3.10")
-        .arg("-c")
-        .arg(json.code())
-        .output()
-        .expect("failed to execute process")
-        .stdout;
+    let out: [String; 2] = match Command::new("python3.10").arg("-c").arg(execute).output() {
+        Ok(x) => [
+            String::from_utf8(x.stdout).unwrap(),
+            String::from_utf8(x.stderr).unwrap(),
+        ],
+        Err(x) => [x.to_string(), "".to_string()],
+    };
 
-    let out: String = String::from_utf8(out_raw).unwrap();
+    if out[1].is_empty() {
+        _ = callback();
+        return Ok("success".to_string());
+    }
 
-    format!(
-        "user:\t{}\nproject:\t{}\nactive_dfs:{}\nexecuted:\n{}",
-        user,
-        project,
-        json.active_dfs()
-            .iter()
-            .fold("".to_string(), |acc, x| { format!("{}\n\t{}", acc, x) }),
-        out
-    )
+    return Err(status::BadRequest(Some(out[1].to_string())));
 }
 
-#[get("/df/<dataframe>/<revision>")]
-fn preview(dataframe: String, revision: String) -> String {
-    format!(
-        "get the dataframe\n\tdf:\t{}\n\trev:\t{}",
-        dataframe, revision
-    )
-}
-
-#[put("/df/batch", data = "<json>")]
-fn batch_preview(json: Json<BatchPreviewReq>) -> String {
-    format!(
-        "dataframes:{}\nrevisions:{}",
-        json.dataframes()
-            .iter()
-            .fold("".to_string(), |acc, x| { format!("{}\n\t{}", acc, x) }),
-        json.revisions()
-            .iter()
-            .fold("".to_string(), |acc, x| { format!("{}\n\t{}", acc, x) }),
-    )
+async fn callback() -> Result<String, Error> {
+    let url = "https://red-pandas.vercel.app/api/orchestrator-hook";
+    let c = reqwest::Client::new();
+    c.get(url).send().await?.text().await
 }
