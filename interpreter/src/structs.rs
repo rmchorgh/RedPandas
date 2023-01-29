@@ -1,5 +1,5 @@
 use derive_getters::Getters;
-use rocket::{http::RawStr, request::FromParam, response::Responder, serde::Deserialize};
+use rocket::{http::RawStr, request::FromParam, serde::Deserialize};
 use std::fmt::Display;
 
 pub(crate) struct UUID<'r>(&'r str);
