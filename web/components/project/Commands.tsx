@@ -26,7 +26,7 @@ export default function Commands({ projectId }: CommandsProps) {
     <>
       {data.commands.map((command) => (
         <div key={command.revisionId}>
-            <code>{command.input}</code>
+          <code>{command.input}</code>
           <code>{command.output}</code>
           {mutateError && <ErrorMessage />}
           <button

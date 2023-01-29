@@ -3,15 +3,15 @@ import { MongoClient } from "mongodb";
 export const clientPromise = new MongoClient(process.env.MONGODB_URI).connect();
 
 export interface Project {
-  datasetId: string;
-  revisionId: string;
+  userId: string;
   name: string;
   commands: {
     input: string;
     output: string;
-    revisionId: string;
+    datasetIds: string[];
   }[];
   runningCommandInput: string | null;
+  commandIndex: number;
   encKey: string;
 }
 

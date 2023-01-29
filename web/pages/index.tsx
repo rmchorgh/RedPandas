@@ -10,7 +10,7 @@ import Banner from "../components/Banner";
 import ProjectCont from "../components/projects/ProjectCont";
 
 export default function Index() {
-  const { data, error, refetch } = trpc.project.list.useQuery();
+  const { data, error } = trpc.project.list.useQuery();
   // user switcher from clerk?
 
   if (error) return <ErrorMessage />;
@@ -19,11 +19,15 @@ export default function Index() {
   return (
     <>
       {/* <Banner /> */}
+      <div className={"transparent absolute top-0 right-0 h-[10vh] w-full p-5"}>
+        <UserButton />
+      </div>
       <div className="top z-[2] h-[100vh] w-[100vw] bg-[#EAF2AB] p-10 text-[#808080e2]">
         {/* hello */}
         <div className="h-full w-full p-20  px-44">
           <div className="align-items flex h-full w-full flex-row flex-wrap items-center justify-center gap-10 ">
-            <CreateProject onSuccess={() => refetch()} />
+            <CreateProject />
+
             {data.map((project) => (
               <ProjectCont
                 key={project._id}
