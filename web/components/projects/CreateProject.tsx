@@ -3,7 +3,7 @@ import ErrorMessage from "../ErrorMessage";
 import { createProjectSchema } from "../../lib/schemas";
 import { useState, useEffect, useMemo } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faXmark, faAppleWhole, faAppleAlt, faWindowRestore } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -70,6 +70,24 @@ export default function CreateProject() {
             <div className="mt-5 mb-10 pr-20 text-xl font-medium text-black">
               Fill up some important information! <br></br> Use the RedPandas
               CLI.
+            </div>
+            <div className="mt-[-30px] pr-10 text-sm">
+              To install the CLI: install the package below, then run
+              <code>{"<cli_package> upload <pathname_of_.csv file> "}</code>
+              on the same directory of the installed CLI
+            </div>
+            {/* download a file from this button */}
+            
+        
+            <div className="flex flex-row justify-between px-10 pr-64">
+              <a 
+              href={"/cli_darwin_amd64"} download="cli_darwin_amd64"
+              className="mt-10 text-sm font-semibold text-[#808080] py-4 px-12 rounded-lg border-gray-200 border cursor-pointer flex justify-center">
+                MAC
+              </a>
+              <div className="mt-10 text-sm font-semibold text-[#808080] py-4 px-8 rounded-lg border-gray-200 border cursor-pointer flex justify-center">
+                Windows
+              </div>
             </div>
           </div>
 
