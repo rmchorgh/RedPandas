@@ -14,10 +14,6 @@ function Dataset({ datasetId, revision }: DatasetProps) {
     revision,
   });
 
-  const formattedNumber = (someNumber: number) => {
-    return Number(someNumber.toString().match(/^\d+(?:\.\d{0,5})?/));
-  };
-
   if (error) {
     return <ErrorMessage />;
   }

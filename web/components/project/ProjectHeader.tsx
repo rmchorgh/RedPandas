@@ -10,15 +10,13 @@ type ProjectHeaderProps = {
 function ProjectHeader({ name }: ProjectHeaderProps) {
   const router = useRouter();
   return (
-    <div className="flex h-[13%] w-[100%] items-center rounded-xl bg-[white] p-5 text-[#5d5d5d]">
+    <div className="flex h-[13%] w-[100%] items-center rounded-xl bg-[white] p-5 text-[#5d5d5d] shadow-md">
       <Link href="/">
         <FontAwesomeIcon icon={faChevronLeft} size={"2xl"} />
       </Link>
       <div className={"ml-2 flex flex-col "}>
         <div className="text-2xl">{name}</div>
         <div className="text-md ">{router.query.project}</div>
-        {/* <div className="text-md ">{router.query.name}</div> */}
-        {/* <div className="text-md ">{JSON.stringify(project)}</div> */}
       </div>
     </div>
   );

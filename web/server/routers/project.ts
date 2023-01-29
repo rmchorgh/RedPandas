@@ -9,6 +9,7 @@ import {
 } from "../../lib/schemas";
 import { TRPCError } from "@trpc/server";
 import * as crypto from "node:crypto";
+import { Configuration, OpenAIApi } from "openai";
 
 export const projectRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
@@ -29,6 +30,7 @@ export const projectRouter = router({
           {
             input: "",
             output: "",
+            plots: [],
             datasets: [
               {
                 id: input.datasetId,
@@ -210,5 +212,51 @@ export const projectRouter = router({
           projectId: input.projectId,
         }),
       });
+    }),
+  chatGPT: protectedProcedure
+    .input(
+      z.object({
+        input: z.string().min(1),
+        projectId: objectIdSchema,
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const configuration = new Configuration({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+      const openai = new OpenAIApi(configuration);
+
+      const project = await (
+        await projects
+      ).findOne<Pick<WithId<Project>, "userId" | "revision" | "commands">>(
+        { _id: new ObjectId(input.projectId) },
+        { projection: { userId: 1, revision: 1, commands: 1 } }
+      );
+      if (project?.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      const resp = await fetch(
+        `http://localhost:8000/preview?userId=${ctx.user.id}&datasetId=${
+          project.commands[project.revision].datasets[0].id
+        }&revision=${project.commands[project.revision].datasets[0].revision}`
+      );
+      const [columns]: string[][] = await resp.json();
+
+      const response = await openai.createCompletion({
+        model: "code-davinci-002",
+        prompt: `You are a large language model getting instructions on how to write Python code. The user giving you instructions has a dataframe with ${
+          columns.length
+        } columns. The names of the columns are ${columns.join(
+          ","
+        )}. You are asked to ${
+          input.input
+        }. Respond only in runnable code and nothing else.`,
+        temperature: 0,
+        max_tokens: 60,
+        top_p: 1.0,
+        frequency_penalty: 0.5,
+        presence_penalty: 0.0,
+      });
+      return response.data.choices;
     }),
 });

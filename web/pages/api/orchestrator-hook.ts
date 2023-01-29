@@ -11,8 +11,8 @@ export default async function handler(
     input: string;
     output: string;
     projectId: string;
+    plots: string[];
   } = req.body;
-  console.log(body);
   const project = await (
     await projects
   ).findOne({ _id: new ObjectId(body.projectId) });
@@ -31,6 +31,7 @@ export default async function handler(
         [`commands.${project?.revision + 1}`]: {
           input: body.input,
           output: body.output,
+          plots: [...project.commands[project.revision].plots, ...body.plots],
           datasets: project.commands[project.revision].datasets.map((x) => ({
             ...x,
             revision: x.revision + 1,

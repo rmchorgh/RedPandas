@@ -23,12 +23,12 @@ export default function Project() {
     <>
       <div
         className={
-          "dotted pointer-events-none fixed absolute top-0 left-0 h-[100vh] w-[100vw] overflow-hidden"
+          "dotted pointer-events-none fixed absolute top-0 left-0 z-[-3] h-[100vh] w-[100vw] overflow-hidden"
         }
       ></div>
       <div
         className={
-          "bottom top-0 left-0 flex h-[100vh] w-[100vw] flex-row bg-[#F6F5F8] p-2"
+          " top-0 left-0 flex h-[100vh] w-[100vw]  flex-row bg-[#F1F5FA] p-2"
         }
       >
         <div
@@ -37,31 +37,23 @@ export default function Project() {
           }
         >
           <ProjectHeader name={data.name} />
-          <Figures datasets={data.commands[data.revision].datasets} />
+          <Figures
+            datasets={data.commands[data.revision].datasets}
+            plots={data.commands[data.revision].plots}
+            projectId={router.query.project as string}
+          />
           {/* <div className={"h-full w-full border"}></div> */}
         </div>
 
-        <div className={"h-full min-w-[45%]  p-5"}>
-          <div className={"h-full w-full border"}>
+        <div className={"h-full min-w-[35%]  p-5"}>
+          <div className={"h-full w-full  "}>
             <Commands
-              commands={data.commands}
+              commands={data.commands.slice(0, data.revision + 1)}
               runningCommandInput={data.runningCommandInput}
               projectId={router.query.project as string}
             />
           </div>
         </div>
-        {/*<div>*/}
-        {/*  <Link href="/">Projects</Link>*/}
-        {/*  <p>{router.query.project}</p>*/}
-        {/*</div>*/}
-        {/*<div>*/}
-        {/*  <div>*/}
-        {/*    <Dataset projectId={router.query.project as string} />*/}
-        {/*  </div>*/}
-        {/*  <div>*/}
-        {/*    <Commands projectId={router.query.project as string} />*/}
-        {/*  </div>*/}
-        {/*</div>*/}
       </div>
     </>
   );

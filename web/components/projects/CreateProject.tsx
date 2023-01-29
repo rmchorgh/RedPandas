@@ -54,10 +54,6 @@ export default function CreateProject() {
         flex-row px-32 py-20 transition-all
         `}
       >
-        {/* <div onClick={() => setOpened(false)}>
-          close me
-        </div> */}
-
         <div className="50% flex h-full w-full flex-col ">
           <div>
             <div className="flex items-center ">

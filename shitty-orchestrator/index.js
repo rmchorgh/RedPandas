@@ -5,6 +5,7 @@ const util = require("node:util");
 const exec = util.promisify(require("node:child_process").exec);
 const crypto = require("node:crypto");
 const fetch = require("node-fetch");
+const fs = require("node:fs/promises");
 
 const app = express();
 const port = 8000;
@@ -16,7 +17,7 @@ app.get("/preview", async (req, res) => {
   const buf = await storage
     .bucket("rp-projects")
     .file(`${req.query.userId}/${req.query.datasetId}.${req.query.revision}`)
-    .download({ start: 0, end: 100000 });
+    .download({ start: 0, end: 30000 });
   const data = Papa.parse(buf.toString());
   res.json(data.data);
 });
@@ -42,10 +43,31 @@ app.post("/run-command", async (req, res) => {
           dataset.id
         }_${dataset.revision + 1}.csv")`
     );
-    const { stdout, stderr } = await exec(`
-    python -c 'import pandas as pd\n${mounts.join("\n")}\n${
-      req.body.input
-    }\n${outs.join("\n")}'`);
+    const { stdout, stderr } = await exec(
+      `python -c 'import pandas as pd
+import matplotlib.pyplot as plt
+${mounts.join("\n")}
+${req.body.input.replaceAll("'", "'\"'\"'")}
+for fig in plt.get_fignums():
+  plt.figure(fig)
+  plt.savefig(f"/Users/bobbygeorge/Desktop/datasets/plots/{fig}.png")
+${outs.join("\n")}'`
+    );
+
+    const plots = await fs.readdir("/Users/bobbygeorge/Desktop/datasets/plots");
+    const plotIds = [];
+    for (const plot of plots) {
+      const id = crypto.randomUUID();
+      await storage
+        .bucket("rp-plots")
+        .upload(`/Users/bobbygeorge/Desktop/datasets/plots/${plot}`, {
+          destination: `${req.body.userId}/${id}`,
+        });
+      await fs.unlink(`/Users/bobbygeorge/Desktop/datasets/plots/${plot}`);
+      plotIds.push(
+        `https://storage.googleapis.com/rp-plots/${req.body.userId}/${id}`
+      );
+    }
 
     for (const dataset of req.body.datasets) {
       await storage
@@ -62,12 +84,13 @@ app.post("/run-command", async (req, res) => {
         );
     }
 
-    await fetch("http://localhost:3001/api/orchestrator-hook", {
+    await fetch("http://localhost:3000/api/orchestrator-hook", {
       method: "POST",
       body: JSON.stringify({
         input: req.body.input,
         output: stderr || stdout,
         projectId: req.body.projectId,
+        plots: plotIds,
       }),
       headers: { "Content-Type": "application/json" },
     });
@@ -85,12 +108,13 @@ app.post("/run-command", async (req, res) => {
         );
     }
 
-    await fetch("http://localhost:3001/api/orchestrator-hook", {
+    await fetch("http://localhost:3000/api/orchestrator-hook", {
       method: "POST",
       body: JSON.stringify({
         input: req.body.input,
         output: stderr || stdout,
         projectId: req.body.projectId,
+        plots: [],
       }),
       headers: { "Content-Type": "application/json" },
     });
