@@ -18,7 +18,7 @@ export default function CreateProject() {
   });
   const [opened, setOpened] = useState(false);
 
-  const { register, handleSubmit, formState } = useForm({
+  const { register, handleSubmit, formState, getValues } = useForm({
     defaultValues: {
       name: "",
       datasetId: "",
