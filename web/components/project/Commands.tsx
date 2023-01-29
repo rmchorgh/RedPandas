@@ -12,6 +12,7 @@ export default function Commands({ projectId }: CommandsProps) {
   const { data, error, refetch } = trpc.project.getCommands.useQuery({
     projectId,
   });
+  console.log(data);
   const { mutate, error: mutateError } = trpc.project.setRevision.useMutation({
     onSuccess: () => utils.project.getDataset.invalidate(),
   });
