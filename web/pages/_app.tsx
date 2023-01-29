@@ -20,13 +20,13 @@ const MyApp: AppType = ({ Component, pageProps }) => {
       <Head>
         <title>RedPandas</title>
       </Head>
-      <ClerkProvider {...pageProps}>
-        <main className={`${inter.variable} font-sans`}>
+      <main className={`${inter.variable} font-sans`}>
+        <ClerkProvider {...pageProps}>
           <Auth>
             <Component {...pageProps} />
           </Auth>
-        </main>
-      </ClerkProvider>
+        </ClerkProvider>
+      </main>
     </>
   );
 };

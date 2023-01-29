@@ -1,8 +1,8 @@
 import { trpc } from "../../lib/client/trpc";
 import ErrorMessage from "../ErrorMessage";
 import { z } from "zod";
-import {useForm} from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export interface RunCommandProps {
   projectId: string;
@@ -12,7 +12,7 @@ export interface RunCommandProps {
 export default function RunCommand({ onSuccess, projectId }: RunCommandProps) {
   const { mutate, error } = trpc.project.runCommand.useMutation({ onSuccess });
 
-  const {register, handleSubmit, formState} = useForm({
+  const { register, handleSubmit, formState } = useForm({
     defaultValues: {
       input: "",
     },
@@ -27,7 +27,9 @@ export default function RunCommand({ onSuccess, projectId }: RunCommandProps) {
         noValidate
       >
         <input {...register("input")} />
-        {formState.errors.input?.message && <p>{formState.errors.input.message}</p>}
+        {formState.errors.input?.message && (
+          <p>{formState.errors.input.message}</p>
+        )}
         <button type="submit">Submit</button>
       </form>
     </>

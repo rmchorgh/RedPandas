@@ -15,7 +15,7 @@ export default function Dataset({ projectId }: DatasetProps) {
   if (!data) return <Loading />;
 
   return (
-    <div>
+    <div className={" bg-[white] "}>
       <table>
         <thead>
           <tr>
