@@ -83,7 +83,12 @@ export const projectRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const resp = await fetch(
-        `http://localhost:8000/preview?userId=${ctx.user.id}&datasetId=${input.datasetId}&revision=${input.revision}`
+        `http://34.123.141.181:8000/preview?userId=${ctx.user.id}&datasetId=${input.datasetId}&revision=${input.revision}`,
+        {
+          headers: {
+            Authorization: `Bearer p@cTK3T^gj7s4FW*`,
+          },
+        }
       );
       const [columns, ...rows]: string[][] = await resp.json();
       return { columns, rows };
@@ -200,10 +205,11 @@ export const projectRouter = router({
         { $set: { runningCommandInput: input.input } }
       );
 
-      await fetch(`http://localhost:8000/run-command`, {
+      await fetch(`http://34.123.141.181:8000/run-command`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer p@cTK3T^gj7s4FW*`,
         },
         body: JSON.stringify({
           datasets: project.commands[project.revision].datasets,
@@ -236,9 +242,14 @@ export const projectRouter = router({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
       const resp = await fetch(
-        `http://localhost:8000/preview?userId=${ctx.user.id}&datasetId=${
+        `http://34.123.141.181:8000/preview?userId=${ctx.user.id}&datasetId=${
           project.commands[project.revision].datasets[0].id
-        }&revision=${project.commands[project.revision].datasets[0].revision}`
+        }&revision=${project.commands[project.revision].datasets[0].revision}`,
+        {
+          headers: {
+            Authorization: `Bearer p@cTK3T^gj7s4FW*`,
+          },
+        }
       );
       const [columns]: string[][] = await resp.json();
 

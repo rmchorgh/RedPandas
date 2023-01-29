@@ -14,6 +14,7 @@ const storage = new Storage();
 app.use(express.json());
 
 app.get("/preview", async (req, res) => {
+  if (req.headers.authorization !== "Bearer p@cTK3T^gj7s4FW*") return;
   const buf = await storage
     .bucket("rp-projects")
     .file(`${req.query.userId}/${req.query.datasetId}.${req.query.revision}`)
@@ -23,6 +24,7 @@ app.get("/preview", async (req, res) => {
 });
 
 app.post("/run-command", async (req, res) => {
+  if (req.headers.authorization !== "Bearer p@cTK3T^gj7s4FW*") return;
   res.json({});
   for (const dataset of req.body.datasets) {
     await storage
@@ -84,7 +86,7 @@ ${outs.join("\n")}'`
         );
     }
 
-    await fetch("http://localhost:3000/api/orchestrator-hook", {
+    await fetch("https://red-pandas.vercel.app/api/orchestrator-hook", {
       method: "POST",
       body: JSON.stringify({
         input: req.body.input,
@@ -108,7 +110,7 @@ ${outs.join("\n")}'`
         );
     }
 
-    await fetch("http://localhost:3000/api/orchestrator-hook", {
+    await fetch("https://red-pandas.vercel.app/api/orchestrator-hook", {
       method: "POST",
       body: JSON.stringify({
         input: req.body.input,
