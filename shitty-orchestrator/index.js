@@ -15,7 +15,7 @@ app.use(express.json());
 app.get("/preview", async (req, res) => {
   const buf = await storage
     .bucket("rp-projects")
-    .file(`${req.query.userId}/${req.query.datasetId}/${req.query.revisionId}`)
+    .file(`${req.query.userId}/${req.query.datasetId}.${req.query.revision}`)
     .download({ start: 0, end: 100000 });
   const data = Papa.parse(buf.toString());
   res.json(data.data);
@@ -23,44 +23,73 @@ app.get("/preview", async (req, res) => {
 
 app.post("/run-command", async (req, res) => {
   res.json({});
-  await storage
-    .bucket("rp-projects")
-    .file(`${req.body.userId}/${req.body.datasetId}/${req.body.revisionId}`)
-    .download({
-      destination: "/Users/bobbygeorge/Desktop/datasets/" + req.body.revisionId,
-    });
-  const nextRev = crypto.randomUUID();
-  try {
-    const { stdout, stderr } = await exec(`
-    python -c 'import pandas as pd\ndf = pd.read_csv("${
-      "/Users/bobbygeorge/Desktop/datasets/" + req.body.revisionId
-    }")\n${req.body.input}\ndf.to_csv("${
-      "/Users/bobbygeorge/Desktop/datasets/" + nextRev
-    }")'`);
-
+  for (const dataset of req.body.datasets) {
     await storage
       .bucket("rp-projects")
-      .upload("/Users/bobbygeorge/Desktop/datasets/" + nextRev, {
-        destination: `${req.body.userId}/${req.body.datasetId}/${nextRev}`,
+      .file(`${req.body.userId}/${dataset.id}.${dataset.revision}`)
+      .download({
+        destination: `/Users/bobbygeorge/Desktop/datasets/${dataset.id}_${dataset.revision}.csv`,
       });
+  }
+  try {
+    const mounts = req.body.datasets.map(
+      (dataset) =>
+        `${dataset.name} = pd.read_csv("/Users/bobbygeorge/Desktop/datasets/${dataset.id}_${dataset.revision}.csv")`
+    );
+    const outs = req.body.datasets.map(
+      (dataset) =>
+        `${dataset.name}.to_csv("/Users/bobbygeorge/Desktop/datasets/${
+          dataset.id
+        }_${dataset.revision + 1}.csv")`
+    );
+    const { stdout, stderr } = await exec(`
+    python -c 'import pandas as pd\n${mounts.join("\n")}\n${
+      req.body.input
+    }\n${outs.join("\n")}'`);
 
-    await fetch("http://localhost:3000/api/orchestrator-hook", {
+    for (const dataset of req.body.datasets) {
+      await storage
+        .bucket("rp-projects")
+        .upload(
+          `/Users/bobbygeorge/Desktop/datasets/${dataset.id}_${
+            dataset.revision + 1
+          }.csv`,
+          {
+            destination: `${req.body.userId}/${dataset.id}.${
+              dataset.revision + 1
+            }`,
+          }
+        );
+    }
+
+    await fetch("http://localhost:3001/api/orchestrator-hook", {
       method: "POST",
       body: JSON.stringify({
         input: req.body.input,
         output: stderr || stdout,
-        revisionId: nextRev,
         projectId: req.body.projectId,
       }),
       headers: { "Content-Type": "application/json" },
     });
   } catch ({ stdout, stderr }) {
-    await fetch("http://localhost:3000/api/orchestrator-hook", {
+    for (const dataset of req.body.datasets) {
+      await storage
+        .bucket("rp-projects")
+        .upload(
+          `/Users/bobbygeorge/Desktop/datasets/${dataset.id}_${dataset.revision}.csv`,
+          {
+            destination: `${req.body.userId}/${dataset.id}.${
+              dataset.revision + 1
+            }`,
+          }
+        );
+    }
+
+    await fetch("http://localhost:3001/api/orchestrator-hook", {
       method: "POST",
       body: JSON.stringify({
         input: req.body.input,
         output: stderr || stdout,
-        revisionId: req.body.revisionId,
         projectId: req.body.projectId,
       }),
       headers: { "Content-Type": "application/json" },

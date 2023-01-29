@@ -22,18 +22,14 @@ export default function CreateProject() {
     defaultValues: {
       name: "",
       datasetId: "",
-      revisionId: "",
     },
     resolver: zodResolver(createProjectSchema),
   });
 
   const buttonDisabled = useMemo(() => {
     return (
-      !!(
-        formState.errors.name ||
-        formState.errors.datasetId ||
-        formState.errors.revisionId
-      ) || !formState.touchedFields
+      !!(formState.errors.name || formState.errors.datasetId) ||
+      !formState.touchedFields
     );
   }, [formState.errors]);
 
@@ -115,20 +111,6 @@ export default function CreateProject() {
               {formState.errors.datasetId?.message && (
                 <p className={"mt-[-3vh] text-sm text-[#FD7F2C]"}>
                   {formState.errors.datasetId.message}
-                </p>
-              )}
-
-              <input
-                {...register("revisionId")}
-                className={
-                  "no-ring border-b outline-none transition-all focus:text-black"
-                }
-                placeholder={"Revision ID"}
-                required
-              />
-              {formState.errors.revisionId?.message && (
-                <p className={"mt-[-3vh] text-sm text-[#FD7F2C]"}>
-                  {formState.errors.revisionId.message}
                 </p>
               )}
 

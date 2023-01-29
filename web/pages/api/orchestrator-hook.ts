@@ -10,24 +10,36 @@ export default async function handler(
   const body: {
     input: string;
     output: string;
-    revisionId: string;
     projectId: string;
   } = req.body;
+  console.log(body);
   const project = await (
     await projects
-  ).findOneAndUpdate(
+  ).findOne({ _id: new ObjectId(body.projectId) });
+  if (!project) {
+    res.status(404).end();
+    return;
+  }
+
+  await (
+    await projects
+  ).updateOne(
     { _id: new ObjectId(body.projectId) },
     {
-      $set: { runningCommandInput: null, revisionId: body.revisionId },
-      $push: {
-        commands: {
+      $set: {
+        runningCommandInput: null,
+        [`commands.${project?.revision + 1}`]: {
           input: body.input,
           output: body.output,
-          revisionId: body.revisionId,
-        },
+          datasets: project.commands[project.revision].datasets.map((x) => ({
+            ...x,
+            revision: x.revision + 1,
+          })),
+        } as any, // mongo has broken type defs
       },
+      $inc: { revision: 1 },
     }
   );
-  if (project.value) await publish(body.projectId, project.value?.encKey);
+  await publish(body.projectId, project.encKey);
   res.status(204).end();
 }

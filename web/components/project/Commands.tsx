@@ -5,42 +5,42 @@ import { useAbly } from "../../lib/client/ably";
 import RunCommand from "./RunCommand";
 
 export interface CommandsProps {
+  commands: { input: string; output: string }[];
+  runningCommandInput: string | null;
   projectId: string;
 }
 
-export default function Commands({ projectId }: CommandsProps) {
-  const { data, error, refetch } = trpc.project.getCommands.useQuery({
-    projectId,
-  });
-  console.log(data);
-  const { mutate, error: mutateError } = trpc.project.setRevision.useMutation({
-    onSuccess: () => utils.project.getDataset.invalidate(),
-  });
+export default function Commands({
+  commands,
+  runningCommandInput,
+  projectId,
+}: CommandsProps) {
   const utils = trpc.useContext();
-
-  useAbly(projectId, data?.encKey);
-
-  if (error) return <ErrorMessage />;
-  if (!data) return <Loading />;
+  const { mutate: undo, error: undoError } = trpc.project.undo.useMutation({
+    onSuccess: () => utils.project.get.invalidate(),
+  });
+  const { mutate: redo, error: redoError } = trpc.project.redo.useMutation({
+    onSuccess: () => utils.project.get.invalidate(),
+  });
 
   return (
     <>
-      {data.commands.map((command) => (
-        <div key={command.revisionId}>
+      {commands.map((command, i) => (
+        <div key={i}>
           <code>{command.input}</code>
           <code>{command.output}</code>
-          {mutateError && <ErrorMessage />}
-          <button
-            onClick={() =>
-              mutate({ revisionId: command.revisionId, projectId })
-            }
-          >
-            Revert to here
-          </button>
         </div>
       ))}
-      {data.runningCommandInput && <code>{data.runningCommandInput}</code>}
-      <RunCommand projectId={projectId} onSuccess={() => refetch()} />
+      {runningCommandInput && <code>{runningCommandInput}</code>}
+
+      {(undoError || redoError) && <ErrorMessage />}
+      <button onClick={() => undo({ projectId })}>Undo</button>
+      <button onClick={() => redo({ projectId })}>Redo</button>
+
+      <RunCommand
+        projectId={projectId}
+        onSuccess={() => utils.project.get.invalidate()}
+      />
     </>
   );
 }
