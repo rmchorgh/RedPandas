@@ -16,6 +16,7 @@ fn rocket() -> _ {
         port: 3000,
         ..Config::default()
     };
+    println!("IP: {}\nPORT: {}", c.address.to_string(), c.port);
     custom(&c).mount("/", routes![run_code])
 }
 
