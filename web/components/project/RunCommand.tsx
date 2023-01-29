@@ -24,7 +24,7 @@ export default function RunCommand({
     trpc.project.chatGPT.useMutation({
       onSuccess: (data) => {
         console.log(data);
-        setValue("input", data[0].text);
+        setValue("input", data[0].text!);
         setGpt(false);
       },
     });
@@ -38,7 +38,7 @@ export default function RunCommand({
 
   return (
     <>
-      {error && <ErrorMessage />}
+      {(error || genError) && <ErrorMessage />}
       <form
         onSubmit={handleSubmit((values) => {
           if (gpt) generate({ projectId, ...values });
@@ -57,7 +57,6 @@ export default function RunCommand({
         />
         <FontAwesomeIcon
           icon={faArrowTurnDown}
-          size={"md"}
           className={"absolute top-6 right-6 rotate-90 opacity-50"}
         />
         {formState.errors.input?.message && (
