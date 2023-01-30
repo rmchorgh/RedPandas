@@ -255,7 +255,7 @@ export const projectRouter = router({
 
       const response = await openai.createCompletion({
         model: "code-davinci-002",
-        prompt: `df = pd.read_csv("data.csv")\n# columns names: ${columns.toString()}\n\n# ${input}\n${
+        prompt: `df = pd.read_csv("data.csv")\n# columns names: ${columns.toString()}\n\n# ${
           input.input
         }\n`,
         temperature: 0,
@@ -264,6 +264,7 @@ export const projectRouter = router({
         frequency_penalty: 0.5,
         presence_penalty: 0.0,
       });
+      console.log(response.data);
       return response.data.choices;
     }),
 });
