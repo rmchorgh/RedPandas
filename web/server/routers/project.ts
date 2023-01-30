@@ -255,9 +255,9 @@ export const projectRouter = router({
 
       const response = await openai.createCompletion({
         model: "code-davinci-002",
-        prompt: `"""df = pd.read_csv("data.csv")\n# columns names: ${columns.toString()}\n\n# ${input}\n${
+        prompt: `df = pd.read_csv("data.csv")\n# columns names: ${columns.toString()}\n\n# ${input}\n${
           input.input
-        }:\n"""\n\n`,
+        }\n`,
         temperature: 0,
         max_tokens: 60,
         top_p: 1.0,
