@@ -255,13 +255,9 @@ export const projectRouter = router({
 
       const response = await openai.createCompletion({
         model: "code-davinci-002",
-        prompt: `You are a large language model getting instructions on how to write Python code. The user giving you instructions has a dataframe with ${
-          columns.length
-        } columns. The names of the columns are ${columns.join(
-          ","
-        )}. You are asked to ${
+        prompt: `"""\n Dataframe df, columns = ${columns.toString()}\n\n${
           input.input
-        }. Respond only in runnable code and nothing else.`,
+        }:\n"""\n\n`,
         temperature: 0,
         max_tokens: 60,
         top_p: 1.0,
