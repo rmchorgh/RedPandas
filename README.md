@@ -1,6 +1,6 @@
 # RedPandas
 
-##About
+## About
 
 For the last few years, we've noticed that data science is rapidly becoming a necessity in collegiate research even in non-technical fields - whether it's a bio lab or a sociology research group, students across the board are increasingly being expected to be to use and manipulate data without formal technical training. We noticed that even when the data-science tools themselves are understood, more technical operational requirements - such as cloud hosting and model deployment, are a major bottlenecks in the efficacy of research groups, as they often struggle to move projects past the local filesystem.
 
